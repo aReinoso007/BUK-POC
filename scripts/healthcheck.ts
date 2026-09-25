@@ -1,5 +1,11 @@
+import { existsSync } from "node:fs";
+import { config } from "dotenv";
 import pg from "pg";
 import { Redis } from "ioredis";
+
+if (existsSync(".env")) {
+  config({ quiet: true });
+}
 
 function requireEnv(name: string): string {
   const value = process.env[name];

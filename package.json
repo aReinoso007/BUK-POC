@@ -6,7 +6,7 @@
   "scripts": {
     "typecheck": "tsc --noEmit && tsc -p tsconfig.healthcheck.json --noEmit",
     "lint": "eslint .",
-    "healthcheck": "tsc -p tsconfig.healthcheck.json && node --env-file=.env.example dist/healthcheck.js"
+    "healthcheck": "tsc -p tsconfig.healthcheck.json && node dist/healthcheck.js"
   },
   "devDependencies": {
     "@eslint/js": "^9.36.0",
@@ -17,6 +17,7 @@
     "typescript-eslint": "^8.44.0"
   },
   "dependencies": {
+    "dotenv": "^18.0.4",
     "ioredis": "^6.0.0",
     "pg": "^8.23.0"
   }
