@@ -4,13 +4,20 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "typecheck": "tsc --noEmit",
-    "lint": "eslint ."
+    "typecheck": "tsc --noEmit && tsc -p tsconfig.healthcheck.json --noEmit",
+    "lint": "eslint .",
+    "healthcheck": "tsc -p tsconfig.healthcheck.json && node --env-file=.env.example dist/healthcheck.js"
   },
   "devDependencies": {
     "@eslint/js": "^9.36.0",
+    "@types/node": "^26.6.2",
+    "@types/pg": "^8.23.1",
     "eslint": "^9.36.0",
     "typescript": "^5.9.2",
     "typescript-eslint": "^8.44.0"
+  },
+  "dependencies": {
+    "ioredis": "^6.0.0",
+    "pg": "^8.23.0"
   }
 }
