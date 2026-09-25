@@ -1,7 +1,7 @@
 ## 1. Fase 0 — Setup
 
 - [x] 1.1 Scaffold del proyecto (estructura de carpetas de `openspec/project.md`, tsconfig, eslint, package.json, `.env.example`). Validación: `npm run typecheck` y `npm run lint` terminan en cero.
-- [ ] 1.2 `docker-compose.yml` con app, postgres y redis, y un Dockerfile multi-stage para la app. Validación: `docker compose config` es válido y `docker compose build app` termina bien.
+- [x] 1.2 `docker-compose.yml` con app, postgres y redis, y un Dockerfile multi-stage para la app. Validación: `docker compose config` es válido y `docker compose build app` termina bien.
 - [ ] 1.3 Conexión a Postgres y Redis verificable con un script de health-check. Validación: con los servicios levantados, el script sale 0 e imprime que ambas conexiones responden.
 
 ## 2. Fase 1 — Modelo de datos
