@@ -1,0 +1,80 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum AccessLevel {
+  none
+  read
+  write
+}
+
+model User {
+  id        Int     @id @default(autoincrement())
+  name      String
+  profileId Int     @map("profile_id")
+  profile   Profile @relation(fields: [profileId], references: [id], onDelete: Restrict)
+
+  @@map("users")
+}
+
+model Profile {
+  id      Int     @id @default(autoincrement())
+  name    String
+  isAdmin Boolean @default(false) @map("is_admin")
+
+  users  User[]
+  grants ModuleGrant[]
+
+  @@map("profiles")
+}
+
+model ModuleGrant {
+  id             Int         @id @default(autoincrement())
+  profileId      Int         @map("profile_id")
+  moduleKey      String      @map("module_key")
+  level          AccessLevel
+  areaRestricted Boolean     @default(false) @map("area_restricted")
+
+  profile      Profile             @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  areas        GrantArea[]
+  restrictions EntityRestriction[]
+
+  @@unique([profileId, moduleKey])
+  @@map("module_grants")
+}
+
+model GrantArea {
+  grantId Int @map("grant_id")
+  areaId  Int @map("area_id")
+
+  grant ModuleGrant @relation(fields: [grantId], references: [id], onDelete: Cascade)
+
+  @@id([grantId, areaId])
+  @@map("grant_areas")
+}
+
+model EntityRestriction {
+  id           Int    @id @default(autoincrement())
+  grantId      Int    @map("grant_id")
+  resourceType String @map("resource_type")
+  dimension    String
+  valueId      Int    @map("value_id")
+
+  grant ModuleGrant @relation(fields: [grantId], references: [id], onDelete: Cascade)
+
+  @@index([grantId, resourceType, dimension])
+  @@map("entity_restrictions")
+}
+
+model AreaClosure {
+  ancestorId   Int @map("ancestor_id")
+  descendantId Int @map("descendant_id")
+  depth        Int
+
+  @@id([ancestorId, descendantId])
+  @@map("area_closure")
+}
