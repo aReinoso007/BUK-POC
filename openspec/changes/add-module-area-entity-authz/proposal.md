@@ -49,3 +49,6 @@ a decenas de miles de empleados ni a miles de restricciones por tenant.
   otra dimensión.
 - Extraer la autorización a un servicio. Sigue siendo una API in-process
   dentro del monolito de mentira.
+- Gestión de áreas (crear/mover). El árbol organizacional se asume dado;
+  el POC solo lo carga vía seed. El recálculo de area_closure al mover
+  un área queda descrito en el diseño, no implementado aquí.

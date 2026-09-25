@@ -19,6 +19,8 @@ Ver `proposal.md` para el porqué. Ver `specs/authz/spec.md` para R1–R8.
 - Multiperfil real, dimensiones distintas de `category`, extraer un servicio.
 - Cola de jobs de producto. El contrato del job (recibe `user_id` y resuelve
   al ejecutarse) se demuestra en el test de invalidación, sin un worker.
+- Crear o mover áreas. El árbol se asume dado y el POC solo lo carga vía
+  seed. El recálculo de `area_closure` al mover un área no se implementa.
 
 ## Decisions
 
@@ -66,6 +68,5 @@ Decisiones ya cerradas, no reabrirlas:
 
 ## Open Questions
 
-1. ¿El POC incluye crear o mover áreas (recálculo de `area_closure` por
-   subárbol) o solo el árbol seedeado? No implementar movimiento de áreas
-   hasta cerrar esto.
+Ninguna. El árbol organizacional se carga solo por seed; no hay gestión
+de áreas en este POC.
