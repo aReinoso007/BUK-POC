@@ -1,0 +1,37 @@
+schema: spec-driven
+
+context: |
+  POC de autorización por módulo, área organizacional y tipo de entidad
+  en un SaaS multi-tenant. El diseño aprobado es la fuente de verdad;
+  no reinterpretarlo ni cambiar arquitectura sin preguntar.
+  Convenciones completas: openspec/project.md.
+  Stack: Node.js, TypeScript, PostgreSQL, Prisma, Redis (ioredis),
+  Express solo como demo, Jest, Docker Compose (app, postgres, redis).
+  Tests colocados junto a cada módulo. Migraciones solo con Prisma.
+  Una tarea de tasks.md = un commit. No mezclar tareas.
+  Cada tarea deja algo ejecutable (test en verde o comando de comprobación).
+  No avanzar de fase sin confirmación. Si el diseño no especifica un
+  detalle, preguntar antes de asumir.
+  Fuera de alcance: multiperfil real, dimensiones distintas de category,
+  extraer el motor a un servicio.
+
+rules:
+  proposal:
+    - El fuera de alcance explícito incluye multiperfil real, dimensiones más allá de category, y extracción a servicio.
+    - No introducir decisiones de arquitectura que el diseño aprobado no tenga.
+  specs:
+    - Cada requisito R1–R8 es un Requirement trazable a ese id.
+    - Usar SHALL y escenarios WHEN/THEN. No reinterpretar el diseño.
+  tasks:
+    - Respetar el orden de fases 0 a 6 y la granularidad acordada.
+    - Cada tarea termina en algo que se puede correr y validar.
+    - Una tarea = un commit.
+  design:
+    - Transcribir el diseño aprobado. No abrir decisiones ya cerradas.
+
+operations:
+  apply:
+    guidance:
+      - Implementar una sola tarea de tasks.md por vez y parar al terminar esa tarea.
+      - No avanzar de fase sin confirmación de que la anterior quedó validada.
+      - Si falta un detalle que el diseño no especifica, preguntar y no asumir.
