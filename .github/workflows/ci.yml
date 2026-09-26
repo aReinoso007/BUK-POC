@@ -85,3 +85,5 @@ jobs:
           EOF
       - name: test
         run: npm test
+      - name: docker build
+        run: docker build -t buk-authz-poc .

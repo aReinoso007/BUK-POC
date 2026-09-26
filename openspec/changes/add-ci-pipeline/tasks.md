@@ -11,7 +11,7 @@
 
 ## 3. Fase 2 — Imagen
 
-- [ ] 3.1 `docker build` de la imagen, como último paso del mismo job, solo si los anteriores pasaron. Validación: el job falla si el Dockerfile no compila, y no llega a este paso si typecheck, lint o test fallaron antes.
+- [x] 3.1 `docker build` de la imagen, como último paso del mismo job, solo si los anteriores pasaron. Validación: el job falla si el Dockerfile no compila, y no llega a este paso si typecheck, lint o test fallaron antes.
 
 ## 4. Fase 3 — README
 
