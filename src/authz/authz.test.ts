@@ -113,6 +113,29 @@ describe("Authz.can", () => {
     });
   });
 
+  it("sin fila de grant can niega y scope queda vacío", async () => {
+    const profile = await prisma.profile.create({
+      data: { name: "Perfil sin grants", isAdmin: false },
+    });
+    const user = await prisma.user.create({
+      data: { name: "Usuario sin grants", profileId: profile.id },
+    });
+    const record = withResource(assetDeclaration, { ownerAreaId: 3, categoryId: 1 });
+
+    try {
+      await Authz.withUser(user.id, async () => {
+        expect(await Authz.can("read", record)).toBe(false);
+        expect(await Authz.can("write", record)).toBe(false);
+        expect(await Authz.scope(assetDeclaration, "read")).toEqual({
+          ownerAreaId: { in: [] },
+        });
+      });
+    } finally {
+      await prisma.user.delete({ where: { id: user.id } });
+      await prisma.profile.delete({ where: { id: profile.id } });
+    }
+  });
+
   it("el segundo can del mismo request no vuelve a leer permisos", async () => {
     let reads = 0;
     const db = prisma.$extends({

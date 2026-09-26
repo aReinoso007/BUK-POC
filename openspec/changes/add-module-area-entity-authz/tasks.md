@@ -25,7 +25,7 @@
 ## 5. Fase 4 — Invariantes y reglas de negocio
 
 - [x] 5.1 Invariante de admin: no se puede borrar ni degradar el último perfil `is_admin`, con lock dentro de la transacción. Validación: test del último admin (rechazo) y test con otro admin presente (permiso).
-- [ ] 5.2 Fail-closed: un usuario sin grant para un módulo obtiene siempre denegado en `can` y un alcance vacío en `scope`. Validación: test de ausencia de fila de grant.
+- [x] 5.2 Fail-closed: un usuario sin grant para un módulo obtiene siempre denegado en `can` y un alcance vacío en `scope`. Validación: test de ausencia de fila de grant.
 
 ## 6. Fase 5 — Demo API
 
