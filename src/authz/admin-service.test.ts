@@ -4,8 +4,15 @@ import { redis } from "../cache/redis.js";
 import { tenantVersionKey } from "../cache/tenant.js";
 import { prisma } from "../db/prisma.js";
 import { adminService } from "./admin-service.js";
+import { Authz, withResource, type ResourceDeclaration } from "./authz.js";
 import { resolveCachedPermissions, userPermissionsCacheKey } from "./permissions-cache.js";
 import { type EffectivePermissions } from "./resolver.js";
+
+const assetDeclaration: ResourceDeclaration = {
+  module: "assets",
+  area: "ownerAreaId",
+  dimensions: { category: "categoryId" },
+};
 
 function countingDb(): { db: PrismaClient; reads: () => number } {
   let reads = 0;
@@ -158,6 +165,52 @@ describe("AdminService", () => {
       if (newKey) {
         await redis.del(newKey);
       }
+      await prisma.user.delete({ where: { id: user.id } });
+      await prisma.profile.delete({ where: { id: profile.id } });
+    }
+  });
+
+  it("un cambio de admin, el siguiente Authz.can del mismo usuario ya no usa el permiso viejo", async () => {
+    const profile = await prisma.profile.create({
+      data: { name: "Perfil can siguiente", isAdmin: false },
+    });
+    const user = await prisma.user.create({
+      data: { name: "Usuario can siguiente", profileId: profile.id },
+    });
+    await prisma.moduleGrant.create({
+      data: {
+        profileId: profile.id,
+        moduleKey: "assets",
+        level: "read",
+        areaRestricted: false,
+      },
+    });
+    const userId = user.id;
+
+    try {
+      await Authz.withUser(userId, async () => {
+        const antes = await Authz.can(
+          "write",
+          withResource(assetDeclaration, { ownerAreaId: null, categoryId: 1 }),
+        );
+        expect(antes).toBe(false);
+      });
+
+      await adminService.setModuleGrant({
+        profileId: profile.id,
+        moduleKey: "assets",
+        level: "write",
+        areaRestricted: false,
+      });
+
+      await Authz.withUser(userId, async () => {
+        const despues = await Authz.can(
+          "write",
+          withResource(assetDeclaration, { ownerAreaId: null, categoryId: 1 }),
+        );
+        expect(despues).toBe(true);
+      });
+    } finally {
       await prisma.user.delete({ where: { id: user.id } });
       await prisma.profile.delete({ where: { id: profile.id } });
     }
