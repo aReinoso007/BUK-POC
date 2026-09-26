@@ -3,7 +3,7 @@ import { PrismaClient } from "@prisma/client";
 import { redis } from "../cache/redis.js";
 import { tenantVersionKey } from "../cache/tenant.js";
 import { prisma } from "../db/prisma.js";
-import { adminService } from "./admin-service.js";
+import { LastAdminError, adminService } from "./admin-service.js";
 import { Authz, withResource, type ResourceDeclaration } from "./authz.js";
 import { resolveCachedPermissions, userPermissionsCacheKey } from "./permissions-cache.js";
 import { type EffectivePermissions } from "./resolver.js";
@@ -213,6 +213,38 @@ describe("AdminService", () => {
     } finally {
       await prisma.user.delete({ where: { id: user.id } });
       await prisma.profile.delete({ where: { id: profile.id } });
+    }
+  });
+
+  it("rechaza degradar o borrar el último administrador", async () => {
+    const admin = await prisma.profile.findFirstOrThrow({ where: { name: "Administrador" } });
+
+    try {
+      await expect(adminService.updateProfile(admin.id, { isAdmin: false })).rejects.toBeInstanceOf(LastAdminError);
+      await expect(adminService.deleteProfile(admin.id)).rejects.toBeInstanceOf(LastAdminError);
+      expect((await prisma.profile.findUniqueOrThrow({ where: { id: admin.id } })).isAdmin).toBe(true);
+    } finally {
+      await prisma.profile.update({ where: { id: admin.id }, data: { isAdmin: true } });
+    }
+  });
+
+  it("permite degradar o borrar un administrador si queda otro", async () => {
+    const extra = await prisma.profile.create({
+      data: { name: "Admin extra", isAdmin: true },
+    });
+    const seed = await prisma.profile.findFirstOrThrow({ where: { name: "Administrador" } });
+
+    try {
+      await adminService.updateProfile(extra.id, { isAdmin: false });
+      expect((await prisma.profile.findUniqueOrThrow({ where: { id: extra.id } })).isAdmin).toBe(false);
+      expect((await prisma.profile.findUniqueOrThrow({ where: { id: seed.id } })).isAdmin).toBe(true);
+
+      await prisma.profile.update({ where: { id: extra.id }, data: { isAdmin: true } });
+      await adminService.deleteProfile(extra.id);
+      expect(await prisma.profile.findUnique({ where: { id: extra.id } })).toBeNull();
+      expect((await prisma.profile.findUniqueOrThrow({ where: { id: seed.id } })).isAdmin).toBe(true);
+    } finally {
+      await prisma.profile.deleteMany({ where: { id: extra.id } });
     }
   });
 });

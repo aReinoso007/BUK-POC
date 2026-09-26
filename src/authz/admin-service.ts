@@ -16,6 +16,13 @@ export type EntityRestrictionInput = {
   valueId: number;
 };
 
+export class LastAdminError extends Error {
+  constructor() {
+    super("El tenant debe conservar un administrador");
+    this.name = "LastAdminError";
+  }
+}
+
 // La escritura corre dentro de $transaction. El INCR va en la línea siguiente,
 // solo si esa promesa resolvió: un rollback no sube la versión.
 async function commitThenBump<T>(write: (db: Prisma.TransactionClient) => Promise<T>): Promise<T> {
@@ -24,9 +31,35 @@ async function commitThenBump<T>(write: (db: Prisma.TransactionClient) => Promis
   return result;
 }
 
+async function lockAdminProfiles(db: Prisma.TransactionClient): Promise<number[]> {
+  const rows = await db.$queryRaw<Array<{ id: number }>>(Prisma.sql`
+    SELECT id FROM profiles WHERE is_admin = true FOR UPDATE
+  `);
+  return rows.map((row) => row.id);
+}
+
+async function assertAdminRemains(db: Prisma.TransactionClient, profileId: number): Promise<void> {
+  const adminIds = await lockAdminProfiles(db);
+  if (adminIds.length === 1 && adminIds[0] === profileId) {
+    throw new LastAdminError();
+  }
+}
+
 export const adminService = {
   async updateProfile(profileId: number, data: { name?: string; isAdmin?: boolean }): Promise<void> {
-    await commitThenBump((db) => db.profile.update({ where: { id: profileId }, data }));
+    await commitThenBump(async (db) => {
+      if (data.isAdmin === false) {
+        await assertAdminRemains(db, profileId);
+      }
+      await db.profile.update({ where: { id: profileId }, data });
+    });
+  },
+
+  async deleteProfile(profileId: number): Promise<void> {
+    await commitThenBump(async (db) => {
+      await assertAdminRemains(db, profileId);
+      await db.profile.delete({ where: { id: profileId } });
+    });
   },
 
   async setModuleGrant(input: ModuleGrantInput): Promise<void> {
