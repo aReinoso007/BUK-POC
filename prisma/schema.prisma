@@ -66,6 +66,7 @@ model EntityRestriction {
 
   grant ModuleGrant @relation(fields: [grantId], references: [id], onDelete: Cascade)
 
+  @@unique([grantId, resourceType, dimension, valueId])
   @@index([grantId, resourceType, dimension])
   @@map("entity_restrictions")
 }

@@ -16,6 +16,7 @@ const prisma = new PrismaClient({
   adapter: new PrismaPg({ connectionString: databaseUrl }),
 });
 
+// Ids fijos. La Fase 5 debe reusar docs/seed-data.md, no inventar otros.
 const AREA_IDS = {
   "Gerencia General": 1,
   "Gerencia Comercial": 2,
@@ -189,19 +190,18 @@ async function upsertUser(name: string, profileId: number) {
   return prisma.user.create({ data: { name, profileId } });
 }
 
-async function upsertRestriction(
-  grantId: number,
-  resourceType: string,
-  valueId: number,
-) {
-  const existing = await prisma.entityRestriction.findFirst({
-    where: { grantId, resourceType, dimension: "category", valueId },
-  });
-  if (existing) {
-    return existing;
-  }
-  return prisma.entityRestriction.create({
-    data: { grantId, resourceType, dimension: "category", valueId },
+function upsertRestriction(grantId: number, resourceType: string, valueId: number) {
+  return prisma.entityRestriction.upsert({
+    where: {
+      grantId_resourceType_dimension_valueId: {
+        grantId,
+        resourceType,
+        dimension: "category",
+        valueId,
+      },
+    },
+    create: { grantId, resourceType, dimension: "category", valueId },
+    update: {},
   });
 }
 
