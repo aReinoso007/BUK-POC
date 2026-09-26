@@ -83,6 +83,44 @@ function allows(permissions: EffectivePermissions, action: Action, record: Autho
   return entityAllows(grant, declaration, record);
 }
 
+export type InFilter = { in: number[] };
+
+export type AuthzWhere = {
+  AND?: AuthzWhere[];
+  [field: string]: InFilter | AuthzWhere[] | undefined;
+};
+
+function scopeWhere(permissions: EffectivePermissions, action: Action, declaration: ResourceDeclaration): AuthzWhere {
+  if (permissions.isAdmin) {
+    return {};
+  }
+  const grant = moduleGrant(permissions, declaration.module);
+  if (LEVEL_RANK[grant.level] < LEVEL_RANK[action]) {
+    return { [declaration.area]: { in: [] } };
+  }
+  const filters: AuthzWhere[] = [];
+  if (grant.areaRestricted) {
+    filters.push({ [declaration.area]: { in: grant.areaIds } });
+  }
+  for (const restriction of grant.restrictions) {
+    if (restriction.resourceType !== declaration.module) {
+      continue;
+    }
+    const column = declaration.dimensions[restriction.dimension];
+    if (!column) {
+      continue;
+    }
+    filters.push({ [column]: { in: restriction.valueIds } });
+  }
+  if (filters.length === 0) {
+    return {};
+  }
+  if (filters.length === 1) {
+    return filters[0] ?? {};
+  }
+  return { AND: filters };
+}
+
 async function permissionsOf(context: RequestContext): Promise<EffectivePermissions> {
   if (!context.permissions) {
     context.permissions = await resolveEffectivePermissions(context.userId, context.db);
@@ -101,5 +139,13 @@ export const Authz = {
       throw new Error("Authz.can requiere un request con usuario");
     }
     return allows(await permissionsOf(context), action, record);
+  },
+
+  async scope(model: ResourceDeclaration, action: Action): Promise<AuthzWhere> {
+    const context = requestStore.getStore();
+    if (!context) {
+      throw new Error("Authz.scope requiere un request con usuario");
+    }
+    return scopeWhere(await permissionsOf(context), action, model);
   },
 };
