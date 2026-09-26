@@ -19,7 +19,7 @@
 ## 4. Fase 3 — Caché
 
 - [x] 4.1 El Resolver usa Redis con la clave `authz:{tenant}:v{version}:user:{id}` y cae a Postgres en miss. Validación: test con miss (lee SQL y escribe la clave) y hit (no vuelve a leer SQL).
-- [ ] 4.2 AdminService: cualquier escritura sobre profiles, module_grants, grant_areas, entity_restrictions o la asignación de perfil incrementa la versión del tenant al confirmarse. La versión vive solo en Redis, clave `authz:{tenant}:version`, con INCR. No hay tabla ni columna en Postgres para este contador. Validación: test de que, tras el commit, INCR cambió el valor usado en la clave de permisos.
+- [x] 4.2 AdminService: cualquier escritura sobre profiles, module_grants, grant_areas, entity_restrictions o la asignación de perfil incrementa la versión del tenant al confirmarse. La versión vive solo en Redis, clave `authz:{tenant}:version`, con INCR. No hay tabla ni columna en Postgres para este contador. Validación: test de que, tras el commit, INCR cambió el valor usado en la clave de permisos.
 - [ ] 4.3 Test de invalidación: se cambia un grant y el siguiente `can`, sin reiniciar el proceso, refleja el cambio. El mismo comportamiento vale para una resolución hecha con `user_id` en el momento de ejecutar, como haría un job. Validación: el test falla si el resultado sigue siendo el permiso viejo.
 
 ## 5. Fase 4 — Invariantes y reglas de negocio
