@@ -23,6 +23,30 @@ export type EffectivePermissions = {
 
 type AreaRow = { grant_id: number; descendant_id: number };
 
+const MODULE_KEYS = ["assets", "complaints", "documents", "payroll", "vacations"] as const;
+
+function fullAccessGrant(moduleKey: string): EffectiveGrant {
+  return {
+    moduleKey,
+    level: AccessLevel.write,
+    areaRestricted: false,
+    areaIds: [],
+    restrictions: [],
+  };
+}
+
+export function moduleGrant(permissions: EffectivePermissions, moduleKey: string): EffectiveGrant {
+  return (
+    permissions.grants.find((grant) => grant.moduleKey === moduleKey) ?? {
+      moduleKey,
+      level: AccessLevel.none,
+      areaRestricted: true,
+      areaIds: [],
+      restrictions: [],
+    }
+  );
+}
+
 export async function resolveEffectivePermissions(
   userId: number,
   db: PrismaClient = defaultPrisma,
@@ -33,6 +57,14 @@ export async function resolveEffectivePermissions(
   });
   if (!user) {
     throw new Error(`Usuario ${userId} no existe`);
+  }
+
+  if (user.profile.isAdmin) {
+    return {
+      userId,
+      isAdmin: true,
+      grants: MODULE_KEYS.map((moduleKey) => fullAccessGrant(moduleKey)),
+    };
   }
 
   const grants = await db.moduleGrant.findMany({
