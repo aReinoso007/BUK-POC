@@ -23,3 +23,9 @@ jobs:
           cache: npm
       - name: npm ci
         run: npm ci
+      - name: prisma generate
+        run: npx prisma generate
+      - name: typecheck
+        run: npm run typecheck
+      - name: lint
+        run: npm run lint
