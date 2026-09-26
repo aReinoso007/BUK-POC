@@ -115,4 +115,51 @@ describe("AdminService", () => {
       await prisma.profile.delete({ where: { id: profile.id } });
     }
   });
+
+  it("el job resuelve al ejecutarse", async () => {
+    const profile = await prisma.profile.create({
+      data: { name: "Perfil job", isAdmin: false },
+    });
+    const user = await prisma.user.create({
+      data: { name: "Usuario job", profileId: profile.id },
+    });
+    await prisma.moduleGrant.create({
+      data: {
+        profileId: profile.id,
+        moduleKey: "assets",
+        level: "read",
+        areaRestricted: false,
+      },
+    });
+
+    let oldKey = "";
+    let newKey = "";
+    try {
+      const alEncolar = await resolveCachedPermissions(user.id);
+      expect(alEncolar.grants[0]?.level).toBe("read");
+      oldKey = await userPermissionsCacheKey(user.id);
+
+      const userId = user.id;
+
+      await adminService.setModuleGrant({
+        profileId: profile.id,
+        moduleKey: "assets",
+        level: "write",
+        areaRestricted: false,
+      });
+
+      const alEjecutar = await resolveCachedPermissions(userId);
+      newKey = await userPermissionsCacheKey(userId);
+      expect(alEjecutar.grants[0]?.level).toBe("write");
+    } finally {
+      if (oldKey) {
+        await redis.del(oldKey);
+      }
+      if (newKey) {
+        await redis.del(newKey);
+      }
+      await prisma.user.delete({ where: { id: user.id } });
+      await prisma.profile.delete({ where: { id: profile.id } });
+    }
+  });
 });

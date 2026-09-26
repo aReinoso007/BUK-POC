@@ -16,6 +16,8 @@ export type EntityRestrictionInput = {
   valueId: number;
 };
 
+// La escritura corre dentro de $transaction. El INCR va en la línea siguiente,
+// solo si esa promesa resolvió: un rollback no sube la versión.
 async function commitThenBump<T>(write: (db: Prisma.TransactionClient) => Promise<T>): Promise<T> {
   const result = await prisma.$transaction(write);
   await redis.incr(tenantVersionKey());
