@@ -4,6 +4,8 @@ import { tenantVersionKey, userPermissionsKey } from "../cache/tenant.js";
 import { prisma as defaultPrisma } from "../db/prisma.js";
 import { resolveEffectivePermissions, type EffectivePermissions } from "./resolver.js";
 
+export const PERMISSIONS_CACHE_TTL_SECONDS = 300;
+
 export async function userPermissionsCacheKey(userId: number): Promise<string> {
   const version = (await redis.get(tenantVersionKey())) ?? "0";
   return userPermissionsKey(version, userId);
@@ -20,6 +22,6 @@ export async function resolveCachedPermissions(
   }
 
   const permissions = await resolveEffectivePermissions(userId, db);
-  await redis.set(key, JSON.stringify(permissions));
+  await redis.set(key, JSON.stringify(permissions), "EX", PERMISSIONS_CACHE_TTL_SECONDS);
   return permissions;
 }

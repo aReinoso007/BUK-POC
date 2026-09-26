@@ -3,7 +3,11 @@ import { PrismaClient } from "@prisma/client";
 import { redis } from "../cache/redis.js";
 import { tenantId } from "../cache/tenant.js";
 import { prisma } from "../db/prisma.js";
-import { resolveCachedPermissions, userPermissionsCacheKey } from "./permissions-cache.js";
+import {
+  PERMISSIONS_CACHE_TTL_SECONDS,
+  resolveCachedPermissions,
+  userPermissionsCacheKey,
+} from "./permissions-cache.js";
 import { type EffectivePermissions } from "./resolver.js";
 
 function countingDb(): { db: PrismaClient; reads: () => number } {
@@ -38,6 +42,9 @@ describe("caché de permisos", () => {
     expect(key.startsWith(`authz:${tenantId()}:v`)).toBe(true);
     expect(key.endsWith(`:user:${user.id}`)).toBe(true);
     expect(JSON.parse((await redis.get(key)) ?? "")).toEqual(permissions);
+    const ttl = await redis.ttl(key);
+    expect(ttl).toBeGreaterThan(0);
+    expect(ttl).toBeLessThanOrEqual(PERMISSIONS_CACHE_TTL_SECONDS);
   });
 
   it("en hit no vuelve a leer Postgres", async () => {
