@@ -1,12 +1,8 @@
 import { AsyncLocalStorage } from "node:async_hooks";
 import { AccessLevel, PrismaClient } from "@prisma/client";
 import { prisma as defaultPrisma } from "../db/prisma.js";
-import {
-  type EffectiveGrant,
-  type EffectivePermissions,
-  moduleGrant,
-  resolveEffectivePermissions,
-} from "./resolver.js";
+import { resolveCachedPermissions } from "./permissions-cache.js";
+import { type EffectiveGrant, type EffectivePermissions, moduleGrant } from "./resolver.js";
 
 const RESOURCE = Symbol("authz.resource");
 
@@ -125,7 +121,7 @@ function scopeWhere(permissions: EffectivePermissions, action: Action, declarati
 
 async function permissionsOf(context: RequestContext): Promise<EffectivePermissions> {
   if (!context.permissions) {
-    context.permissions = await resolveEffectivePermissions(context.userId, context.db);
+    context.permissions = await resolveCachedPermissions(context.userId, context.db);
   }
   return context.permissions;
 }

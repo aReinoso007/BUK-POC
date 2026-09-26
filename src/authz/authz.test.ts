@@ -126,10 +126,15 @@ describe("Authz.can", () => {
       },
     });
     const record = withResource(assetDeclaration, { ownerAreaId: 1, categoryId: 1 });
-    await Authz.withUser(await userId("Pedro"), async () => {
-      expect(await Authz.can("read", record)).toBe(true);
-      expect(await Authz.can("read", record)).toBe(true);
-    }, db as unknown as PrismaClient);
-    expect(reads).toBe(1);
+    await Authz.withUser(
+      await userId("Pedro"),
+      async () => {
+        expect(await Authz.can("read", record)).toBe(true);
+        const afterFirst = reads;
+        expect(await Authz.can("read", record)).toBe(true);
+        expect(reads).toBe(afterFirst);
+      },
+      db as unknown as PrismaClient,
+    );
   });
 });
