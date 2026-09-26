@@ -3,10 +3,17 @@ import { prisma } from "../src/db/prisma.js";
 import { Authz, withResource, type ResourceDeclaration } from "../src/authz/authz.js";
 
 // Ejemplos del caso ya cubiertos, sin repetir el mismo assert:
-// - Pedro lee Documentos y no los escribe: src/authz/authz.test.ts
+// - Pedro lee Documentos: este archivo, "Pedro: lectura en Documentos, escritura en Gestión de Activos"
+// - Pedro no escribe Documentos: src/authz/authz.test.ts "write en assets no autoriza write en documentos"
 // - Gerente General ve y edita todo: src/authz/resolver.test.ts y src/authz/authz.test.ts
 // - Analistas de remuneraciones, solo lectura: src/authz/scope.test.ts
 // - Jefe de TI, solo Computadores y Teléfonos: src/authz/authz.test.ts
+
+const documentDeclaration: ResourceDeclaration = {
+  module: "documents",
+  area: "areaId",
+  dimensions: {},
+};
 
 const assetDeclaration: ResourceDeclaration = {
   module: "assets",
@@ -88,6 +95,14 @@ describe("ejemplos del caso", () => {
     await Authz.withUser(await userId("Jefe de Gerencia Comercial"), async () => {
       expect(await Authz.can("read", operaciones)).toBe(false);
       expect(await Authz.can("read", norte)).toBe(true);
+    });
+  });
+
+  it("Pedro: lectura en Documentos, escritura en Gestión de Activos", async () => {
+    const documento = withResource(documentDeclaration, { areaId: 1 });
+
+    await Authz.withUser(await userId("Pedro"), async () => {
+      expect(await Authz.can("read", documento)).toBe(true);
     });
   });
 
