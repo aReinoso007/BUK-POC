@@ -1,8 +1,16 @@
 # POC de autorización Buk
 
+[![CI](https://github.com/aReinoso007/BUK-POC/actions/workflows/ci.yml/badge.svg)](https://github.com/aReinoso007/BUK-POC/actions/workflows/ci.yml)
+
 Motor in-process de autorización por módulo, área organizacional y tipo de entidad. La demo HTTP expone el recurso Activos.
 
 Hace falta Node.js 22 y Docker.
+
+## CI
+
+Cada push y pull request corre el workflow de `.github/workflows/ci.yml`:
+typecheck, lint, la suite completa contra Postgres y Redis efímeros, y un
+build de la imagen Docker. Resultados en la pestaña Actions del repo.
 
 ## Levantar
 

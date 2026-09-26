@@ -15,4 +15,4 @@
 
 ## 4. Fase 3 — README
 
-- [ ] 4.1 README: una sección breve de CI (qué corre y dónde ver los resultados) y el badge de estado del workflow. Validación: la sección nombra el workflow y el badge apunta a ese archivo.
+- [x] 4.1 README: una sección breve de CI (qué corre y dónde ver los resultados) y el badge de estado del workflow. Validación: la sección nombra el workflow y el badge apunta a ese archivo.
