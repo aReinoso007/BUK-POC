@@ -14,6 +14,12 @@ const documentDeclaration: ResourceDeclaration = {
   dimensions: {},
 };
 
+const payrollDeclaration: ResourceDeclaration = {
+  module: "payroll",
+  area: "areaId",
+  dimensions: { category: "categoryId" },
+};
+
 function matches(where: AuthzWhere, record: Record<string, unknown>): boolean {
   if (where.AND) {
     return where.AND.every((part) => matches(part, record));
@@ -44,8 +50,18 @@ describe("Authz.scope", () => {
       { model: assetDeclaration, record: withResource(assetDeclaration, { ownerAreaId: 6, categoryId: 1 }) },
       { model: assetDeclaration, record: withResource(assetDeclaration, { ownerAreaId: 6, categoryId: 3 }) },
       { model: documentDeclaration, record: withResource(documentDeclaration, { areaId: 1 }) },
+      { model: payrollDeclaration, record: withResource(payrollDeclaration, { areaId: null, categoryId: 1 }) },
+      { model: payrollDeclaration, record: withResource(payrollDeclaration, { areaId: 1, categoryId: 1 }) },
+      { model: payrollDeclaration, record: withResource(payrollDeclaration, { areaId: 6, categoryId: 99 }) },
     ];
-    const users = ["Pedro", "Jefe de Gerencia Comercial", "Jefe de TI", "Gerente General", "Carolina"];
+    const users = [
+      "Pedro",
+      "Jefe de Gerencia Comercial",
+      "Jefe de TI",
+      "Gerente General",
+      "Carolina",
+      "Analista de Remuneraciones",
+    ];
     const actions = ["read", "write"] as const;
 
     for (const name of users) {
@@ -60,6 +76,23 @@ describe("Authz.scope", () => {
         }
       }
     }
+  });
+
+  it("payroll:read no incluye ningún registro al pedir write", async () => {
+    const records = [
+      withResource(payrollDeclaration, { areaId: null, categoryId: null }),
+      withResource(payrollDeclaration, { areaId: 1, categoryId: 1 }),
+      withResource(payrollDeclaration, { areaId: 6, categoryId: 99 }),
+    ];
+
+    await Authz.withUser(await userId("Analista de Remuneraciones"), async () => {
+      expect(await Authz.scope(payrollDeclaration, "write")).toEqual({ areaId: { in: [] } });
+      for (const record of records) {
+        expect(await Authz.can("write", record)).toBe(false);
+        const where = await Authz.scope(payrollDeclaration, "write");
+        expect(matches(where, record)).toBe(false);
+      }
+    });
   });
 
   it("restringido con areaIds vacío no abre toda la empresa", async () => {

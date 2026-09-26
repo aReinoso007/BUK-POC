@@ -95,6 +95,8 @@ function scopeWhere(permissions: EffectivePermissions, action: Action, declarati
     return {};
   }
   const grant = moduleGrant(permissions, declaration.module);
+  // Igual que can: el nivel se decide antes del filtro de área o categoría.
+  // { in: [] } no matchea ninguna fila. No devolver {} , que sería sin restricciones.
   if (LEVEL_RANK[grant.level] < LEVEL_RANK[action]) {
     return { [declaration.area]: { in: [] } };
   }
