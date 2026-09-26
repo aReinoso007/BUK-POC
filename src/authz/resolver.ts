@@ -40,6 +40,8 @@ export function moduleGrant(permissions: EffectivePermissions, moduleKey: string
     permissions.grants.find((grant) => grant.moduleKey === moduleKey) ?? {
       moduleKey,
       level: AccessLevel.none,
+      // Default conservador, no un accidente: sin grant el alcance es vacío.
+      // areaRestricted false con areaIds vacío significa toda la empresa.
       areaRestricted: true,
       areaIds: [],
       restrictions: [],
