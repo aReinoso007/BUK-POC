@@ -13,6 +13,29 @@ jobs:
       DATABASE_URL: postgresql://postgres:postgres@localhost:5432/buk_authz
       REDIS_URL: redis://localhost:6379
       TENANT_ID: demo-tenant
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: buk_authz
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d buk_authz"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 5
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 5
     steps:
       - name: checkout
         uses: actions/checkout@v4
@@ -23,6 +46,8 @@ jobs:
           cache: npm
       - name: npm ci
         run: npm ci
+      - name: healthcheck
+        run: npm run healthcheck
       - name: prisma generate
         run: npx prisma generate
       - name: typecheck

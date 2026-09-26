@@ -5,7 +5,7 @@
 
 ## 2. Fase 1 — Postgres, Redis y la suite
 
-- [ ] 2.1 Agregar el bloque `services` de Postgres y Redis al job. El `env` del job no se mueve: ya apunta a `localhost` desde la 1.1. Validación: `npm run healthcheck` confirma que ambos responden antes de continuar.
+- [x] 2.1 Agregar el bloque `services` de Postgres y Redis al job. El `env` del job no se mueve: ya apunta a `localhost` desde la 1.1. Validación: `npm run healthcheck` confirma que ambos responden antes de continuar.
 - [ ] 2.2 `npx prisma migrate deploy` y `npm run db:seed` contra esos services. Validación: una query de humo confirma que el seed corrió.
 - [ ] 2.3 `npm test` contra los services. Validación: el job es verde con los 33 tests, y si se rompe a propósito un test, el job falla ahí.
 
