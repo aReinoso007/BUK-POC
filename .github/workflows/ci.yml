@@ -1,0 +1,25 @@
+name: ci
+
+# push en cualquier rama, a propósito: la validación es el push de la rama,
+# sin exigir un PR. pull_request queda sin filtro.
+on:
+  push:
+  pull_request:
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/buk_authz
+      REDIS_URL: redis://localhost:6379
+      TENANT_ID: demo-tenant
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4
+      - name: setup-node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: npm ci
+        run: npm ci
