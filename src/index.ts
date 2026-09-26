@@ -1,2 +1,7 @@
-/** Punto de entrada. La demo Express se agrega en la fase 5. */
-export {};
+import { app } from "./demo/app.js";
+
+const port = Number(process.env.PORT ?? 3000);
+
+app.listen(port, () => {
+  console.log(`Demo en http://localhost:${port}`);
+});

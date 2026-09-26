@@ -71,6 +71,15 @@ model EntityRestriction {
   @@map("entity_restrictions")
 }
 
+model Asset {
+  id          Int     @id @default(autoincrement())
+  name        String
+  ownerAreaId Int?    @map("owner_area_id")
+  categoryId  Int     @map("category_id")
+
+  @@map("assets")
+}
+
 model AreaClosure {
   ancestorId   Int @map("ancestor_id")
   descendantId Int @map("descendant_id")

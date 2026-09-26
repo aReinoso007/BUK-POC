@@ -3,6 +3,9 @@ FROM node:22-alpine AS build
 WORKDIR /app
 
 COPY package.json package-lock.json ./
+COPY prisma.config.ts ./
+COPY prisma ./prisma
+ENV DATABASE_URL=postgresql://postgres:postgres@localhost:5432/buk_authz
 RUN npm ci
 
 COPY tsconfig.json ./
@@ -16,6 +19,9 @@ WORKDIR /app
 ENV NODE_ENV=production
 
 COPY --chown=node:node package.json package-lock.json ./
+COPY --chown=node:node prisma.config.ts ./
+COPY --chown=node:node prisma ./prisma
+ENV DATABASE_URL=postgresql://postgres:postgres@localhost:5432/buk_authz
 RUN npm ci --omit=dev && chown -R node:node /app
 
 COPY --from=build --chown=node:node /app/dist ./dist

@@ -251,6 +251,20 @@ async function main() {
       }
     }
   }
+
+  const assets = [
+    { name: "Notebook Zona Norte", ownerAreaId: AREA_IDS["Ventas Zona Norte"], categoryId: ASSET_CATEGORY_IDS.Computadores },
+    { name: "Teléfono Marketing", ownerAreaId: AREA_IDS.Marketing, categoryId: ASSET_CATEGORY_IDS.Teléfonos },
+    { name: "Camioneta Operaciones", ownerAreaId: AREA_IDS["Gerencia de Operaciones"], categoryId: ASSET_CATEGORY_IDS.Vehículos },
+  ];
+  for (const asset of assets) {
+    const existing = await prisma.asset.findFirst({ where: { name: asset.name } });
+    if (existing) {
+      await prisma.asset.update({ where: { id: existing.id }, data: asset });
+    } else {
+      await prisma.asset.create({ data: asset });
+    }
+  }
 }
 
 main()

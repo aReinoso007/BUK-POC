@@ -29,7 +29,7 @@
 
 ## 6. Fase 5 — Demo API
 
-- [ ] 6.1 Dos o tres endpoints Express del recurso Asset que usan el motor por dentro: `GET /assets` usa `scope`, `PATCH /assets/:id` usa `can`. Un middleware lee el header `X-User-Id`, busca ese usuario en Postgres y lo deja en `req.user`. Sin autenticación real. Validación: contra la app levantada, un usuario con escritura recibe 200 en el PATCH de un activo permitido y un usuario sin permiso recibe denegado; el GET no devuelve activos fuera del alcance.
+- [x] 6.1 Dos o tres endpoints Express del recurso Asset que usan el motor por dentro: `GET /assets` usa `scope`, `PATCH /assets/:id` usa `can`. Un middleware lee el header `X-User-Id`, busca ese usuario en Postgres y lo deja en `req.user`. Sin autenticación real. Validación: contra la app levantada, un usuario con escritura recibe 200 en el PATCH de un activo permitido y un usuario sin permiso recibe denegado; el GET no devuelve activos fuera del alcance.
 - [ ] 6.2 Colección de Postman o Thunder Client, o un script curl, con los casos del documento. Validación: el script o la colección se ejecuta contra la demo y el resultado de cada caso coincide con el diseño.
 
 ## 7. Fase 6 — Documentación del POC
