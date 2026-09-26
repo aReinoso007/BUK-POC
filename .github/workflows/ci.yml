@@ -83,3 +83,5 @@ jobs:
             await client.end();
           }
           EOF
+      - name: test
+        run: npm test
