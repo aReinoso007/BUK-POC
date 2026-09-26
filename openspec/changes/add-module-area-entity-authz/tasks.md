@@ -34,4 +34,4 @@
 
 ## 7. Fase 6 — Documentación del POC
 
-- [ ] 7.1 README con cómo levantar todo (`docker compose up`), cómo correr los tests, y una tabla corta requisito del caso (R1–R8) → dónde está implementado. Validación: un lector sigue el README y levanta la demo y la suite sin pasos que no estén escritos.
+- [x] 7.1 README con cómo levantar todo (`docker compose up`), cómo correr los tests, y una tabla corta requisito del caso (R1–R8) → dónde está implementado. Validación: un lector sigue el README y levanta la demo y la suite sin pasos que no estén escritos.
