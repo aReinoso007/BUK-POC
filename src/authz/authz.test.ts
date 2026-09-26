@@ -76,6 +76,25 @@ describe("Authz.can", () => {
     });
   });
 
+  it("un activo sin área solo lo escribe quien no tiene restricción de área", async () => {
+    const record = withResource(assetDeclaration, { ownerAreaId: null, categoryId: 1 });
+
+    await Authz.withUser(await userId("Pedro"), async () => {
+      expect(await Authz.can("write", record)).toBe(true);
+    });
+    await Authz.withUser(await userId("Jefe de Gerencia Comercial"), async () => {
+      expect(await Authz.can("read", record)).toBe(false);
+    });
+  });
+
+  it("write en assets no autoriza write en documentos", async () => {
+    const document = withResource(documentDeclaration, { areaId: 1 });
+
+    await Authz.withUser(await userId("Pedro"), async () => {
+      expect(await Authz.can("write", document)).toBe(false);
+    });
+  });
+
   it("el área del registro tiene que estar en el alcance expandido", async () => {
     const norte = withResource(assetDeclaration, { ownerAreaId: 3, categoryId: 1 });
     const operaciones = withResource(assetDeclaration, { ownerAreaId: 6, categoryId: 1 });
