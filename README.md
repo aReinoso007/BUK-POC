@@ -9,6 +9,7 @@ Hace falta Node.js 22 y Docker.
 ```sh
 cp .env.example .env
 npm install
+npx prisma generate
 docker compose up --build -d
 npx prisma migrate deploy
 npm run db:seed
