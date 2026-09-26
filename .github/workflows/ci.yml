@@ -54,3 +54,32 @@ jobs:
         run: npm run typecheck
       - name: lint
         run: npm run lint
+      - name: migrate deploy
+        run: npx prisma migrate deploy
+      - name: db seed
+        run: npm run db:seed
+      - name: seed check
+        run: |
+          node --input-type=module <<'EOF'
+          import pg from "pg";
+
+          const checks = [
+            ["SELECT count(*) FROM profiles", 8],
+            ["SELECT count(*) FROM assets", 3],
+          ];
+
+          const client = new pg.Client({ connectionString: process.env.DATABASE_URL });
+          await client.connect();
+          try {
+            for (const [sql, expected] of checks) {
+              const { rows } = await client.query(sql);
+              const count = Number(rows[0].count);
+              console.log(`${sql}; -- ${count}`);
+              if (count !== expected) {
+                throw new Error(`${sql} dio ${count}, se esperaba ${expected}`);
+              }
+            }
+          } finally {
+            await client.end();
+          }
+          EOF
