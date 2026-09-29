@@ -54,6 +54,17 @@ curl -sS -X PATCH http://localhost:3000/assets/3 \
 
 El `2` es Pedro. El `3` es la camioneta de Gerencia de Operaciones, categoría Vehículos.
 
+## Interfaz
+
+Con la API en el puerto 3000:
+
+```sh
+npm install --prefix web
+npm run web:dev
+```
+
+Abre http://localhost:5173. Ahí están las ocho cuentas del seed. Elegir una manda `X-User-Id` y la pantalla muestra el grant efectivo, el organigrama (la raíz y sus subáreas) y, por cada activo, si entra en `GET /assets` y si `can` autoriza lectura o escritura. Guardar un nombre llama a `PATCH /assets/:id`: el servidor responde 200 o 403.
+
 ## Requisitos
 
 | Requisito | Dónde |

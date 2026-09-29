@@ -3,11 +3,23 @@ import express, { type Request, type Response } from "express";
 import { Authz, withResource } from "../authz/authz.js";
 import { prisma } from "../db/prisma.js";
 import { assetDeclaration } from "../modules/assets/asset.js";
+import { cors } from "./cors.js";
 import { loadUser } from "./load-user.js";
+import { buildSession, listAccounts } from "./session.js";
 
 export const app = express();
 
+app.use(cors);
 app.use(express.json());
+
+app.get("/demo/accounts", async (_req, res, next) => {
+  try {
+    res.json(await listAccounts());
+  } catch (error) {
+    next(error);
+  }
+});
+
 app.use(loadUser);
 
 function userId(req: Request, res: Response): number | undefined {
@@ -73,6 +85,19 @@ app.patch("/assets/:id", async (req, res, next) => {
       const updated = await prisma.asset.update({ where: { id }, data: { name } });
       res.json(updated);
     });
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.get("/demo/session", async (req, res, next) => {
+  const id = userId(req, res);
+  if (id === undefined) {
+    return;
+  }
+  try {
+    const session = await Authz.withUser(id, () => buildSession(id));
+    res.json(session);
   } catch (error) {
     next(error);
   }

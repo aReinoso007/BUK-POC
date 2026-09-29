@@ -8,6 +8,7 @@
     "lint": "eslint .",
     "healthcheck": "tsc -p tsconfig.healthcheck.json && node dist/healthcheck.js",
     "db:seed": "prisma db seed",
+    "web:dev": "npm --prefix web run dev",
     "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js"
   },
   "devDependencies": {
