@@ -8,6 +8,8 @@ export default defineConfig({
     proxy: {
       "/demo": "http://localhost:3000",
       "/assets": "http://localhost:3000",
+      "/admin": "http://localhost:3000",
+      "/debug": "http://localhost:3000",
     },
   },
 });

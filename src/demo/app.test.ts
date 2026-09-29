@@ -140,3 +140,70 @@ describe("demo de cuentas", () => {
     expect(tiSession.assets.find((asset) => asset.category.id === 3)?.canWrite).toBe(false);
   });
 });
+
+describe("demo de admin", () => {
+  it("un no-admin recibe 403 en /admin", async () => {
+    const carolina = String(await userId("Carolina"));
+    const admin = await prisma.profile.findFirstOrThrow({ where: { name: "Administrador" } });
+    const pedro = await prisma.profile.findFirstOrThrow({ where: { name: "Pedro" } });
+
+    const list = await request(app).get("/admin/profiles").set("X-User-Id", carolina);
+    expect(list.status).toBe(403);
+    expect(list.body).toEqual({ error: "denegado" });
+
+    const grant = await request(app)
+      .patch("/admin/grants")
+      .set("X-User-Id", carolina)
+      .send({ profileId: pedro.id, moduleKey: "documents", level: "write" });
+    expect(grant.status).toBe(403);
+
+    const degrade = await request(app)
+      .patch(`/admin/profiles/${admin.id}`)
+      .set("X-User-Id", carolina)
+      .send({ isAdmin: false });
+    expect(degrade.status).toBe(403);
+  });
+
+  it("degradar al último admin responde 409", async () => {
+    const gerente = String(await userId("Gerente General"));
+    const admin = await prisma.profile.findFirstOrThrow({ where: { name: "Administrador" } });
+
+    const response = await request(app)
+      .patch(`/admin/profiles/${admin.id}`)
+      .set("X-User-Id", gerente)
+      .send({ isAdmin: false });
+
+    expect(response.status).toBe(409);
+    expect(response.body).toEqual({ error: "no se puede dejar el tenant sin administrador" });
+    expect((await prisma.profile.findUniqueOrThrow({ where: { id: admin.id } })).isAdmin).toBe(true);
+  });
+
+  it("un PATCH de grant se ve en el GET /assets siguiente", async () => {
+    const gerente = String(await userId("Gerente General"));
+    const profile = await prisma.profile.create({
+      data: { name: "Perfil invalidación http", isAdmin: false },
+    });
+    const user = await prisma.user.create({
+      data: { name: "Usuario invalidación http", profileId: profile.id },
+    });
+
+    try {
+      const before = await request(app).get("/assets").set("X-User-Id", String(user.id));
+      expect(before.status).toBe(200);
+      expect(before.body).toEqual([]);
+
+      const patch = await request(app)
+        .patch("/admin/grants")
+        .set("X-User-Id", gerente)
+        .send({ profileId: profile.id, moduleKey: "assets", level: "read", areaRestricted: false });
+      expect(patch.status).toBe(200);
+
+      const after = await request(app).get("/assets").set("X-User-Id", String(user.id));
+      expect(after.status).toBe(200);
+      expect((after.body as AssetBody[]).length).toBeGreaterThan(0);
+    } finally {
+      await prisma.user.delete({ where: { id: user.id } });
+      await prisma.profile.delete({ where: { id: profile.id } });
+    }
+  });
+});

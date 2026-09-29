@@ -6,6 +6,7 @@ import { prisma } from "../db/prisma.js";
 import {
   PERMISSIONS_CACHE_TTL_SECONDS,
   resolveCachedPermissions,
+  resolvePermissionsWithSource,
   userPermissionsCacheKey,
 } from "./permissions-cache.js";
 import { type EffectivePermissions } from "./resolver.js";
@@ -66,5 +67,17 @@ describe("caché de permisos", () => {
     } finally {
       await redis.del(key);
     }
+  });
+
+  it("resolvePermissionsWithSource distingue miss y hit", async () => {
+    const user = await prisma.user.findFirstOrThrow({ where: { name: "Pedro" } });
+    const key = await userPermissionsCacheKey(user.id);
+    await redis.del(key);
+
+    const miss = await resolvePermissionsWithSource(user.id);
+    const hit = await resolvePermissionsWithSource(user.id);
+    expect(miss.source).toBe("postgres");
+    expect(hit.source).toBe("redis");
+    expect(hit.permissions).toEqual(miss.permissions);
   });
 });

@@ -40,6 +40,51 @@ export type AssetDecision = {
   writeReason: string;
 };
 
+export type CacheSource = "redis" | "postgres";
+
+export type PermissionsProbe = {
+  source: CacheSource;
+};
+
+export type AssetScope = {
+  module: string;
+  action: string;
+  where: unknown;
+};
+
+export type AdminRestriction = {
+  resourceType: string;
+  dimension: string;
+  valueId: number;
+  name: string;
+};
+
+export type AdminGrant = {
+  id: number;
+  moduleKey: string;
+  level: "none" | "read" | "write";
+  areaRestricted: boolean;
+  areaIds: NamedId[];
+  restrictions: AdminRestriction[];
+};
+
+export type AdminProfile = {
+  id: number;
+  name: string;
+  isAdmin: boolean;
+  users: { id: number; name: string }[];
+  grants: AdminGrant[];
+};
+
+export type GrantPatch = {
+  profileId: number;
+  moduleKey: string;
+  level: "none" | "read" | "write";
+  areaRestricted: boolean;
+  areaIds: number[];
+  restrictions: { resourceType: string; dimension: string; valueId: number }[];
+};
+
 export type Session = {
   user: {
     id: number;

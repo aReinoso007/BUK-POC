@@ -228,6 +228,59 @@ describe("AdminService", () => {
     }
   });
 
+  it("updateGrantFull revierte los writes si falla después del segundo", async () => {
+    const profile = await prisma.profile.create({
+      data: { name: "Perfil grant atómico", isAdmin: false },
+    });
+    const grant = await prisma.moduleGrant.create({
+      data: {
+        profileId: profile.id,
+        moduleKey: "assets",
+        level: "read",
+        areaRestricted: true,
+        areas: { create: [{ areaId: 3 }] },
+        restrictions: {
+          create: [{ resourceType: "assets", dimension: "category", valueId: 1 }],
+        },
+      },
+    });
+
+    try {
+      const before = await version();
+      await expect(
+        adminService.updateGrantFull(
+          {
+            profileId: profile.id,
+            moduleKey: "assets",
+            level: "write",
+            areaRestricted: false,
+            areaIds: [6],
+            restrictions: [{ resourceType: "assets", dimension: "category", valueId: 3 }],
+          },
+          {
+            afterSecondWrite: async () => {
+              throw new Error("corte de prueba");
+            },
+          },
+        ),
+      ).rejects.toThrow("corte de prueba");
+
+      expect(await version()).toBe(before);
+      const stored = await prisma.moduleGrant.findUniqueOrThrow({
+        where: { id: grant.id },
+        include: { areas: true, restrictions: true },
+      });
+      expect(stored).toMatchObject({
+        level: "read",
+        areaRestricted: true,
+      });
+      expect(stored.areas.map((area) => area.areaId)).toEqual([3]);
+      expect(stored.restrictions.map((row) => row.valueId)).toEqual([1]);
+    } finally {
+      await prisma.profile.delete({ where: { id: profile.id } });
+    }
+  });
+
   it("permite degradar o borrar un administrador si queda otro", async () => {
     const extra = await prisma.profile.create({
       data: { name: "Admin extra", isAdmin: true },

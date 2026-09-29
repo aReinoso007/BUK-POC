@@ -16,6 +16,19 @@ export type EntityRestrictionInput = {
   valueId: number;
 };
 
+export type UpdateGrantFullInput = {
+  profileId: number;
+  moduleKey: string;
+  level?: AccessLevel;
+  areaRestricted?: boolean;
+  areaIds?: number[];
+  restrictions?: EntityRestrictionInput[];
+};
+
+export type GrantWriteHooks = {
+  afterSecondWrite?: (db: Prisma.TransactionClient) => Promise<void>;
+};
+
 export class LastAdminError extends Error {
   constructor() {
     super("El tenant debe conservar un administrador");
@@ -42,6 +55,28 @@ async function assertAdminRemains(db: Prisma.TransactionClient, profileId: numbe
   const adminIds = await lockAdminProfiles(db);
   if (adminIds.length === 1 && adminIds[0] === profileId) {
     throw new LastAdminError();
+  }
+}
+
+async function replaceGrantAreas(db: Prisma.TransactionClient, grantId: number, areaIds: number[]): Promise<void> {
+  await db.grantArea.deleteMany({ where: { grantId } });
+  if (areaIds.length > 0) {
+    await db.grantArea.createMany({
+      data: areaIds.map((areaId) => ({ grantId, areaId })),
+    });
+  }
+}
+
+async function replaceEntityRestrictions(
+  db: Prisma.TransactionClient,
+  grantId: number,
+  restrictions: EntityRestrictionInput[],
+): Promise<void> {
+  await db.entityRestriction.deleteMany({ where: { grantId } });
+  if (restrictions.length > 0) {
+    await db.entityRestriction.createMany({
+      data: restrictions.map((restriction) => ({ grantId, ...restriction })),
+    });
   }
 }
 
@@ -74,24 +109,53 @@ export const adminService = {
   },
 
   async setGrantAreas(grantId: number, areaIds: number[]): Promise<void> {
-    await commitThenBump(async (db) => {
-      await db.grantArea.deleteMany({ where: { grantId } });
-      if (areaIds.length > 0) {
-        await db.grantArea.createMany({
-          data: areaIds.map((areaId) => ({ grantId, areaId })),
-        });
-      }
-    });
+    await commitThenBump((db) => replaceGrantAreas(db, grantId, areaIds));
   },
 
   async setEntityRestrictions(grantId: number, restrictions: EntityRestrictionInput[]): Promise<void> {
-    await commitThenBump(async (db) => {
-      await db.entityRestriction.deleteMany({ where: { grantId } });
-      if (restrictions.length > 0) {
-        await db.entityRestriction.createMany({
-          data: restrictions.map((restriction) => ({ grantId, ...restriction })),
-        });
+    await commitThenBump((db) => replaceEntityRestrictions(db, grantId, restrictions));
+  },
+
+  async updateGrantFull(input: UpdateGrantFullInput, hooks?: GrantWriteHooks) {
+    return commitThenBump(async (db) => {
+      const existing = await db.moduleGrant.findUnique({
+        where: {
+          profileId_moduleKey: { profileId: input.profileId, moduleKey: input.moduleKey },
+        },
+      });
+      const level = input.level ?? existing?.level;
+      const areaRestricted = input.areaRestricted ?? existing?.areaRestricted;
+      if (level === undefined || areaRestricted === undefined) {
+        throw new Error("level y areaRestricted son obligatorios al crear el grant");
       }
+
+      const grant = await db.moduleGrant.upsert({
+        where: {
+          profileId_moduleKey: { profileId: input.profileId, moduleKey: input.moduleKey },
+        },
+        create: {
+          profileId: input.profileId,
+          moduleKey: input.moduleKey,
+          level,
+          areaRestricted,
+        },
+        update: { level, areaRestricted },
+      });
+
+      if (input.areaIds !== undefined) {
+        await replaceGrantAreas(db, grant.id, input.areaIds);
+      }
+      if (hooks?.afterSecondWrite) {
+        await hooks.afterSecondWrite(db);
+      }
+      if (input.restrictions !== undefined) {
+        await replaceEntityRestrictions(db, grant.id, input.restrictions);
+      }
+
+      return db.moduleGrant.findUniqueOrThrow({
+        where: { id: grant.id },
+        include: { areas: true, restrictions: true },
+      });
     });
   },
 
